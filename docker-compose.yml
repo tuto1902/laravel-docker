@@ -1,0 +1,49 @@
+version: '3.5'
+
+services:
+  laravel-app:
+    build:
+      context: '.'
+      args: 
+        uid: ${UID}
+    container_name: laravel-app
+    environment: 
+      - APACHE_RUN_USER=#${UID}
+      - APACHE_RUN_GROUP=#${UID}
+    volumes: 
+      - .:/var/www/html
+    ports: 
+      - ${HOST_PORT}:80
+    networks: 
+      backend:
+        aliases: 
+          - laravel-app
+
+  npm:
+    image: node:10-alpine
+    container_name: npm
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    entrypoint: ['npm']
+
+  mysql-db:
+    image: mysql:latest
+    container_name: mysql-db
+    volumes: 
+      - ./run/var:/var/lib/mysql
+      # This can be used to initialize the database with an existing SQL dump file
+      #- ./run/dump/init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment: 
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+    networks: 
+      backend:
+        aliases: 
+          - db
+
+networks: 
+  backend:
+    name: backend-network
